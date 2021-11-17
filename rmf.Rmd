@@ -1,0 +1,158 @@
+---
+title: "RMF Analysis"
+author: "Group 2"
+output: html_notebook
+---
+
+```{r}
+load(url("http://statmath.wu.ac.at/~vana/datasets/RMFAnalysisClean.rda"))
+```
+
+```{r}
+if (!require("scatterplot3d")) install.packages("scatterplot3d"); library(scatterplot3d)
+if (!require("cluster")) install.packages("cluster"); library("cluster")
+if (!require("dbscan")) install.packages("dbscan"); library("dbscan");
+```
+
+```{r}
+head(RMFAnalysisClean)
+```
+
+
+```{r}
+RMFAnalysisClean <- na.omit(RMFAnalysisClean)
+```
+
+```{r}
+plot(RMFAnalysisClean)
+```
+
+```{r}
+scatterplot3d(RMFAnalysisClean[,1:3])
+```
+
+```{r}
+model_scaled <- scale(RMFAnalysisClean)
+```
+
+```{r}
+plot(model_scaled)
+#After scaling we see that the first two principal components are "Monetary.mean" and "Frequency"
+```
+
+
+## K-means
+```{r}
+# Manually select number of initial values 
+nstart <- 5
+# Manually select optimal number of clusters 
+clusters <- 4
+# k-means Clustering
+model.pc <- kmeans(model_scaled, 
+                   centers = clusters, 
+                   nstart = nstart)
+```
+
+
+```{r}
+model.pc$centers
+```
+
+```{r}
+#Here we can see the index of the cluster assigned by `kmeans()` to each observation
+model.pc$cluster
+```
+
+```{r}
+#Here we use the clustering to colour code the points in the scatterplot 
+#(cbbPalette is where we put the colours we want to use)
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+plot(model_scaled, col = cbbPalette[model.pc$cluster])
+points(model.pc$centers, pch = 3, cex = 2)
+text(model.pc$centers, labels = 1:4, pos = 2)
+```
+
+## Hierarchical clustering
+```{r}
+model_dist <- dist(model_scaled) # Euclidean distance matrix
+model_hc <- hclust(model_dist)
+```
+
+```{r}
+#The dendrogram can be visualized by:
+plot(model_hc)
+```
+
+```{r}
+groups <- cutree(model_hc, h = 2)
+groups
+```
+
+```{r}
+groups <- cutree(model_hc, k=clusters)
+groups
+```
+
+```{r}
+plot(model_hc)
+rect.hclust(model_hc, k=clusters)
+```
+
+```{r}
+dif <- par(mfrow = c(1,2))
+plot(model_scaled, col=cbbPalette[model.pc$cluster], 
+     main = "K-means")
+plot(model_scaled, col=cbbPalette[groups], 
+     main = "hclust")
+par(dif)
+```
+
+## DBSCAN
+```{r fig.height=6, fig.width=6}
+### Partitional Clustering (k-Means)
+clusters <- 3
+model_km <- kmeans(scale(RMFAnalysisClean), 
+                   clusters)
+plot(RMFAnalysisClean, col = cbbPalette[model_km$cluster])
+```
+
+```{r fig.height=8, fig.width=10}
+### DBSCAN - minPts = roughly dimension+1
+pal <- c("#000000","#004949","#009292","#ff6db6","#ffb6db",
+ "#490092","#006ddb","#b66dff","#6db6ff","#b6dbff",
+ "#920000","#924900","#db6d00","#24ff24","#ffff6d")
+model_dbs <- dbscan::dbscan(RMFAnalysisClean, 
+                            eps = 7, 
+                            minPts = 3)
+plot(RMFAnalysisClean, col = pal[model_dbs$cluster + 1])
+```
+
+```{r}
+model_dbs
+```
+
+```{r}
+kNNdistplot(RMFAnalysisClean, k = 3) 
+abline(h = 6, lty = 2)
+```
+
+```{r fig.height=8, fig.width=10}
+### DBSCAN - minPts = roughly dimension+1
+model_dbs2 <- dbscan::dbscan(RMFAnalysisClean, 
+                            eps = 5.5, 
+                            minPts = 3)
+plot(RMFAnalysisClean, col = pal[model_dbs2$cluster + 1])
+```
+
+```{r fig.height=8, fig.width=10}
+### Hierarchical Clustering
+md <- dist(scale(RMFAnalysisClean))
+model_hc <- hclust(md)
+plot(RMFAnalysisClean, col=cbbPalette[cutree(model_hc, k=clusters)])
+```
+
+```{r}
+kNNdistplot(RMFAnalysisClean, k = 3) 
+abline(h = 11, lty=2)
+```
+
