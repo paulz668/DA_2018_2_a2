@@ -156,3 +156,8 @@ kNNdistplot(RMFAnalysisClean, k = 3)
 abline(h = 11, lty=2)
 ```
 
+### Task 3: final suggestion
+
+The DBSCAN algorithm does not work as the eps that is found using the elbow method is too big to find meaningful clusters within the data. This is likely because the data has clusters with varying densities and is higher dimensional.
+This leaves us with the k-means and hierarchical clustering. The k-means algorithm partitions the data into roughly equal size clusters. The hierarchical clustering on the other hand clusters the data into a big cluster near the origin and then a cluster of outliers along each axis.
+As the dataset seems to be rather homogeneous, we believe that the hierarchical clustering makes the most sense for an online retailer as this means that frequent shoppers who do not spend much on average per buy are clustered as are non-frequent shoppers who tend to spend a lot per buy for the outlier clusters. This would enable the online store to target these segments with specific ads and the like.
